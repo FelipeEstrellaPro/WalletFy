@@ -70,7 +70,10 @@ class GoalsDao extends DatabaseAccessor<AppDatabase> with _$GoalsDaoMixin {
       ..addColumns([goals.currentAmount])
       ..where(goals.isArchived.equals(false));
     final rows = await query.get();
-    return rows.fold(
-        0.0, (sum, row) => sum + (row.read(goals.currentAmount) ?? 0.0));
+    double sum = 0.0;
+    for (final row in rows) {
+      sum += row.read(goals.currentAmount) ?? 0.0;
+    }
+    return sum;
   }
 }

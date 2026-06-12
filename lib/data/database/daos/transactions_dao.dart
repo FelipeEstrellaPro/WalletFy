@@ -43,8 +43,11 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
       ..where(transactions.goalId.equals(goalId) &
           transactions.category.equals('deposit'));
     final rows = await query.get();
-    return rows.fold(
-        0.0, (sum, row) => sum + (row.read(transactions.amount) ?? 0.0));
+    double sum = 0.0;
+    for (final row in rows) {
+      sum += row.read(transactions.amount) ?? 0.0;
+    }
+    return sum;
   }
 
   /// All transactions across all goals in date range for analytics.

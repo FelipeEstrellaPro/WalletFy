@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../domain/entities/user_settings_entity.dart';
-import '../../domain/repositories/settings_repository.dart';
 import 'database_provider.dart';
 
 part 'settings_provider.g.dart';

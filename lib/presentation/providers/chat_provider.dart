@@ -1,11 +1,10 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../core/errors/failures.dart';
 import '../../data/repositories/ollama_service.dart';
 import '../../domain/entities/chat_message_entity.dart';
-import '../../domain/entities/goal_entity.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/repositories/settings_repository.dart';
 import 'database_provider.dart';
-import 'goals_provider.dart';
 import 'settings_provider.dart';
 
 part 'chat_provider.g.dart';

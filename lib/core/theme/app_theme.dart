@@ -189,7 +189,7 @@ class AppTheme {
 
       // Dividers
       dividerTheme: DividerThemeData(
-        color: scheme.outlineVariant.withOpacity(0.5),
+        color: scheme.outlineVariant.withValues(alpha: 0.5),
         thickness: 1,
         space: 1,
       ),

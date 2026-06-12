@@ -10,9 +10,13 @@ class CurrencyFormatter {
     decimalDigits: 2,
   );
 
-  static final _compactFmt = NumberFormat.compact(locale: 'es_MX');
+  static final _compactFmt = NumberFormat.compactCurrency(
+    locale: 'es_MX',
+    symbol: '\$',
+    decimalDigits: 0,
+  );
 
-  static final _percentFmt = NumberFormat.percentPattern('es_MX');
+
 
   /// Format as currency: $1,234.56
   static String format(double amount) => _currencyFmt.format(amount);
@@ -20,7 +24,7 @@ class CurrencyFormatter {
   /// Format compact: $1.2K, $3.4M
   static String formatCompact(double amount) {
     if (amount < 1000) return _currencyFmt.format(amount);
-    return '\$${_compactFmt.format(amount)}';
+    return _compactFmt.format(amount);
   }
 
   /// Format as integer pesos: $1,234
