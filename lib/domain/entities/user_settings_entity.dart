@@ -81,7 +81,7 @@ class UserSettingsEntity extends Equatable {
         globalStreak: 0,
         globalFrozenStreak: 0,
         ollamaUrl: 'http://localhost:11434',
-        ollamaModel: 'llama3',
+        ollamaModel: 'qwen2.5-coder:7b',
       );
 
   @override
