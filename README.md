@@ -95,6 +95,14 @@ Explora la carpeta `docs/files/` para guías exhaustivas:
 - 🗄️ [Base de Datos (Drift) y Modelado](docs/files/database.md)
 - 🧠 [Integración y Prompting de IA Local](docs/files/ai_integration.md)
 
+## ⚠️ Descargo de Responsabilidad (Disclaimer)
+
+**WalletFY** es un proyecto de software libre con fines educativos y de uso personal. 
+- **Ausencia de Garantía**: El autor no asume ninguna responsabilidad legal, financiera o por pérdida de datos derivados del uso de esta aplicación. Las decisiones financieras tomadas a partir de la información o consejos de la Inteligencia Artificial integrada son responsabilidad exclusiva del usuario.
+- **Sin Costos Ocultos**: Esta aplicación no incluye software de pago, suscripciones, ni requiere licencias comerciales para operar. Las herramientas subyacentes (Flutter, Drift, Ollama) son de código abierto.
+
 ## 📄 Licencia
 
-MIT — Felipe Estrella 2026
+Este proyecto está bajo la Licencia **MIT** — Siéntete libre de usarlo, modificarlo y distribuirlo bajo tus propios riesgos.
+
+*Felipe Estrella 2026*
