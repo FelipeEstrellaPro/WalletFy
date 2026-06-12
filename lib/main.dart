@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:local_notifier/local_notifier.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/theme/app_theme.dart';
 import 'presentation/providers/settings_provider.dart';
@@ -13,6 +14,9 @@ Future<void> main() async {
 
   // Initialize local notifications
   await localNotifier.setup(appName: 'WalletFY');
+
+  // Initialize date formatting for all locales
+  await initializeDateFormatting();
 
   // Configure flutter_animate defaults
   Animate.restartOnHotReload = true;

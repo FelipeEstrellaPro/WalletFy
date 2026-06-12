@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,8 +44,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   void _nextPage() {
     _pageController.nextPage(
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOutCubic,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutQuint,
     );
     setState(() => _currentPage++);
   }
@@ -58,12 +59,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         ) ??
         0;
 
-    // Save settings & complete onboarding
     await ref
         .read(settingsNotifierProvider.notifier)
         .completeOnboarding(userName: name.isNotEmpty ? name : 'Amigo');
 
-    // Create first goal if provided
     if (goalTitle.isNotEmpty && goalAmount > 0) {
       await ref.read(goalsNotifierProvider.notifier).createGoal(
             GoalEntity(
@@ -87,7 +86,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           pageBuilder: (_, __, ___) => const MainShell(),
           transitionsBuilder: (_, anim, __, child) =>
               FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 600),
+          transitionDuration: const Duration(milliseconds: 800),
         ),
       );
     }
@@ -95,62 +94,66 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 600;
 
     return Scaffold(
-      backgroundColor: cs.surface,
-      body: Row(
+      extendBodyBehindAppBar: true,
+      body: Stack(
         children: [
-          // ── Left decorative panel ───────────────────────────
-          if (size.width > 900)
-            Expanded(
-              flex: 2,
-              child: _LeftPanel(),
-            ),
-          // ── Right content panel ─────────────────────────────
-          Expanded(
-            flex: 3,
-            child: Column(
-              children: [
-                // Progress dots
-                Padding(
-                  padding: const EdgeInsets.only(top: 32, bottom: 8),
-                  child: _ProgressDots(current: _currentPage, total: 3),
-                ),
-                // Pages
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      _WelcomePage(onNext: _nextPage),
-                      _NamePage(
-                        controller: _nameController,
-                        focus: _nameFocus,
-                        onNext: () {
-                          if (_nameController.text.trim().isNotEmpty) {
-                            _nextPage();
-                          }
-                        },
+          // ── Immersive Animated Background ──
+          const _AnimatedBackground(),
+
+          // ── Centered Glass Card ──
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: _GlassCard(
+                width: isDesktop ? 600 : size.width * 0.95,
+                height: isDesktop ? 700 : size.height * 0.85,
+                child: Column(
+                  children: [
+                    // Top Progress Indicator
+                    Padding(
+                      padding: const EdgeInsets.only(top: 32, bottom: 16),
+                      child: _ProgressDots(current: _currentPage, total: 3),
+                    ),
+                    
+                    // Pages
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _WelcomePage(onNext: _nextPage),
+                          _NamePage(
+                            controller: _nameController,
+                            focus: _nameFocus,
+                            onNext: () {
+                              if (_nameController.text.trim().isNotEmpty) {
+                                _nextPage();
+                              }
+                            },
+                          ),
+                          _FirstGoalPage(
+                            titleController: _goalTitleController,
+                            amountController: _goalAmountController,
+                            selectedEmoji: _selectedEmoji,
+                            selectedColor: _selectedColor,
+                            isCreating: _isCreating,
+                            onEmojiChanged: (e) =>
+                                setState(() => _selectedEmoji = e),
+                            onColorChanged: (c) =>
+                                setState(() => _selectedColor = c),
+                            onFinish: _finish,
+                            onSkip: _finish,
+                          ),
+                        ],
                       ),
-                      _FirstGoalPage(
-                        titleController: _goalTitleController,
-                        amountController: _goalAmountController,
-                        selectedEmoji: _selectedEmoji,
-                        selectedColor: _selectedColor,
-                        isCreating: _isCreating,
-                        onEmojiChanged: (e) =>
-                            setState(() => _selectedEmoji = e),
-                        onColorChanged: (c) =>
-                            setState(() => _selectedColor = c),
-                        onFinish: _finish,
-                        onSkip: _finish,
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],
@@ -160,80 +163,117 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 }
 
 // ─────────────────────────────────────────────
-// Left decorative panel
+// Premium Animated Background
 // ─────────────────────────────────────────────
-class _LeftPanel extends StatelessWidget {
+class _AnimatedBackground extends StatelessWidget {
+  const _AnimatedBackground();
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [cs.primary, cs.tertiary],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Stack(
+      children: [
+        Container(color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
+        // Orb 1 (Primary)
+        Positioned(
+          top: -150,
+          left: -150,
+          child: _GlowingOrb(color: cs.primary, size: 500)
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .move(duration: 10.seconds, begin: Offset.zero, end: const Offset(150, 100)),
         ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(48),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.asset(
-                'assets/images/logo.png',
-                width: 180,
-                filterQuality: FilterQuality.high,
-              )
-                  .animate()
-                  .fadeIn(duration: 800.ms)
-                  .slideY(begin: -0.2, duration: 800.ms),
-              const SizedBox(height: 48),
-              ...[
-                '💰 Controla tu dinero',
-                '🎯 Alcanza tus metas',
-                '🔥 Mantén tu racha',
-                '🤖 IA financiera personal',
-                '📊 Analíticas detalladas',
-              ]
-                  .asMap()
-                  .entries
-                  .map(
-                    (e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 8),
-                          Text(
-                            e.value,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                    color: cs.onPrimary,
-                                    fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      )
-                          .animate(delay: (200 + e.key * 100).ms)
-                          .fadeIn(duration: 500.ms)
-                          .slideX(begin: -0.2),
-                    ),
-                  ),
-              const Spacer(),
-              Text(
-                AppConstants.appTagline,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: cs.onPrimary.withValues(alpha: 0.7),
-                      fontStyle: FontStyle.italic,
-                    ),
-              ).animate(delay: 900.ms).fadeIn(),
-            ],
+        // Orb 2 (Tertiary)
+        Positioned(
+          bottom: -200,
+          right: -100,
+          child: _GlowingOrb(color: cs.tertiary, size: 600)
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .move(duration: 12.seconds, begin: Offset.zero, end: const Offset(-200, -150)),
+        ),
+        // Orb 3 (Secondary)
+        Positioned(
+          top: 300,
+          right: -200,
+          child: _GlowingOrb(color: cs.secondary, size: 450)
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .move(duration: 15.seconds, begin: Offset.zero, end: const Offset(-100, 200)),
+        ),
+        // Extreme Blur Layer
+        Positioned.fill(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 120, sigmaY: 120),
+            child: Container(color: Colors.transparent),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _GlowingOrb extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _GlowingOrb({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.4),
       ),
     );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Glassmorphic Card
+// ─────────────────────────────────────────────
+class _GlassCard extends StatelessWidget {
+  final Widget child;
+  final double width;
+  final double height;
+  const _GlassCard({required this.child, required this.width, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(32),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        child: Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: isDark
+                ? cs.surface.withValues(alpha: 0.4)
+                : cs.surface.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.white.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              )
+            ],
+          ),
+          child: child,
+        ),
+      ),
+    ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.1, curve: Curves.easeOutCubic);
   }
 }
 
@@ -253,13 +293,17 @@ class _ProgressDots extends StatelessWidget {
       children: List.generate(total, (i) {
         final active = i == current;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: active ? 24 : 8,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutQuart,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          width: active ? 32 : 12,
           height: 8,
           decoration: BoxDecoration(
-            color: active ? cs.primary : cs.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(4),
+            color: active ? cs.primary : cs.onSurface.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: active
+                ? [BoxShadow(color: cs.primary.withValues(alpha: 0.4), blurRadius: 8)]
+                : null,
           ),
         );
       }),
@@ -278,33 +322,47 @@ class _WelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    
     return Padding(
-      padding: const EdgeInsets.all(48),
+      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset('assets/images/logo.png', width: 140)
-              .animate()
-              .fadeIn(duration: 600.ms)
-              .scale(begin: const Offset(0.7, 0.7)),
-          const SizedBox(height: 40),
-          Text('¡Bienvenido a WalletFY!',
-              style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w800))
-              .animate(delay: 300.ms).fadeIn().slideY(begin: 0.2),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: cs.primaryContainer.withValues(alpha: 0.5),
+            ),
+            child: Image.asset('assets/images/logo.png', width: 140)
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .moveY(begin: -5, end: 5, duration: 2.seconds, curve: Curves.easeInOut),
+          ).animate().fadeIn(duration: 600.ms).scaleXY(begin: 0.8),
+          const SizedBox(height: 48),
+          Text(
+            'Bienvenido a WalletFY',
+            textAlign: TextAlign.center,
+            style: tt.displaySmall?.copyWith(fontWeight: FontWeight.w900, color: cs.onSurface),
+          ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.1),
           const SizedBox(height: 16),
           Text(
-            'Tu compañero inteligente para alcanzar\ntus metas de ahorro.',
+            'Ahorro que Inspira. Crecimiento Claro.\nTu asesor financiero inteligente personal.',
             textAlign: TextAlign.center,
-            style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+            style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
           ).animate(delay: 500.ms).fadeIn(),
-          const SizedBox(height: 48),
-          FilledButton(
-            onPressed: onNext,
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(200, 52),
+          const Spacer(),
+          SizedBox(
+            width: double.infinity,
+            height: 64,
+            child: FilledButton(
+              onPressed: onNext,
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                elevation: 0,
+              ),
+              child: Text('Comenzar →', style: tt.titleMedium?.copyWith(color: cs.onPrimary, fontWeight: FontWeight.bold)),
             ),
-            child: const Text('Comenzar →'),
-          ).animate(delay: 700.ms).fadeIn().slideY(begin: 0.3),
+          ).animate(delay: 700.ms).fadeIn().slideY(begin: 0.2),
         ],
       ),
     );
@@ -327,40 +385,57 @@ class _NamePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    
     return Padding(
       padding: const EdgeInsets.all(48),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('👋 ¿Cómo te llamas?', style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w700))
-              .animate().fadeIn(duration: 400.ms),
-          const SizedBox(height: 8),
-          Text('Personalizaremos tu experiencia con tu nombre.',
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant))
-              .animate(delay: 100.ms).fadeIn(),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: cs.primaryContainer, shape: BoxShape.circle),
+            child: Icon(Icons.waving_hand_rounded, size: 40, color: cs.primary),
+          ).animate().fadeIn().scaleXY(),
           const SizedBox(height: 32),
+          Text('¿Cómo te llamas?', style: tt.displaySmall?.copyWith(fontWeight: FontWeight.w800))
+              .animate(delay: 200.ms).fadeIn().slideX(begin: -0.1),
+          const SizedBox(height: 12),
+          Text('Personalizaremos la experiencia de la IA para ti.',
+              style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant))
+              .animate(delay: 300.ms).fadeIn(),
+          const SizedBox(height: 48),
           TextField(
             controller: controller,
             focusNode: focus,
             autofocus: true,
             textCapitalization: TextCapitalization.words,
-            style: tt.headlineMedium,
-            decoration: const InputDecoration(
+            style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
               hintText: 'Tu nombre...',
-              prefixIcon: Icon(Icons.person_outline_rounded),
+              hintStyle: tt.headlineMedium?.copyWith(color: cs.onSurface.withValues(alpha: 0.2)),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(right: 16, left: 8),
+                child: Icon(Icons.person_outline_rounded, size: 32, color: cs.primary),
+              ),
+              border: UnderlineInputBorder(borderSide: BorderSide(color: cs.primary.withValues(alpha: 0.3), width: 2)),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: cs.primary.withValues(alpha: 0.3), width: 2)),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: cs.primary, width: 3)),
             ),
             onSubmitted: (_) => onNext(),
-          ).animate(delay: 200.ms).fadeIn().slideY(begin: 0.2),
-          const SizedBox(height: 32),
-          Align(
-            alignment: Alignment.centerRight,
+          ).animate(delay: 400.ms).fadeIn().slideY(begin: 0.1),
+          const Spacer(),
+          SizedBox(
+            width: double.infinity,
+            height: 64,
             child: FilledButton(
               onPressed: onNext,
-              style: FilledButton.styleFrom(minimumSize: const Size(160, 52)),
-              child: const Text('Siguiente →'),
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text('Siguiente →', style: tt.titleMedium?.copyWith(color: cs.onPrimary, fontWeight: FontWeight.bold)),
             ),
-          ).animate(delay: 400.ms).fadeIn(),
+          ).animate(delay: 600.ms).fadeIn(),
         ],
       ),
     );
@@ -399,23 +474,66 @@ class _FirstGoalPage extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(48),
+      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('🎯 Tu primera meta', style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w700))
-              .animate().fadeIn(duration: 400.ms),
-          const SizedBox(height: 8),
-          Text('Crea tu primera meta de ahorro. ¡Puedes agregar más después!',
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant))
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: cs.tertiaryContainer, shape: BoxShape.circle),
+                child: Icon(Icons.rocket_launch_rounded, size: 32, color: cs.tertiary),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text('Tu primera meta', style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w800)),
+              ),
+            ],
+          ).animate().fadeIn().slideX(begin: -0.1),
+          const SizedBox(height: 12),
+          Text('Define un objetivo que te inspire a ahorrar todos los días.',
+              style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant))
               .animate(delay: 100.ms).fadeIn(),
-          const SizedBox(height: 28),
+          const SizedBox(height: 32),
 
+          // Goal name
+          TextField(
+            controller: titleController,
+            textCapitalization: TextCapitalization.sentences,
+            style: tt.titleLarge,
+            decoration: InputDecoration(
+              labelText: '¿Qué quieres lograr?',
+              hintText: 'Ej: Viaje a Japón...',
+              prefixText: '$selectedEmoji  ',
+              filled: true,
+              fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            ),
+          ).animate(delay: 200.ms).fadeIn().slideY(begin: 0.1),
+
+          const SizedBox(height: 20),
+          // Amount
+          TextField(
+            controller: amountController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: tt.titleLarge?.copyWith(color: cs.primary, fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
+              labelText: '¿Cuánto necesitas?',
+              prefixText: '\$  ',
+              hintText: '10,000',
+              filled: true,
+              fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            ),
+          ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.1),
+
+          const SizedBox(height: 24),
           // Emoji picker
-          Text('Elige un emoji', style: tt.labelLarge),
-          const SizedBox(height: 8),
+          Text('Personaliza el Emoji', style: tt.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
           SizedBox(
-            height: 48,
+            height: 52,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: AppConstants.goalEmojis.take(15).map((e) {
@@ -424,86 +542,54 @@ class _FirstGoalPage extends StatelessWidget {
                   onTap: () => onEmojiChanged(e),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.only(right: 8),
-                    width: 44,
-                    height: 44,
+                    margin: const EdgeInsets.only(right: 12),
+                    width: 52,
+                    height: 52,
                     decoration: BoxDecoration(
-                      color: selected
-                          ? cs.primaryContainer
-                          : cs.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(12),
-                      border: selected
-                          ? Border.all(color: cs.primary, width: 2)
-                          : null,
+                      color: selected ? cs.primaryContainer : cs.surfaceContainerLowest.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(16),
+                      border: selected ? Border.all(color: cs.primary, width: 2) : null,
                     ),
-                    child: Center(child: Text(e, style: const TextStyle(fontSize: 22))),
+                    child: Center(child: Text(e, style: const TextStyle(fontSize: 26))),
                   ),
                 );
               }).toList(),
             ),
-          ).animate(delay: 200.ms).fadeIn(),
-
-          const SizedBox(height: 20),
-          // Goal name
-          TextField(
-            controller: titleController,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              labelText: '¿Para qué quieres ahorrar?',
-              hintText: 'Ej: Laptop nueva, Viaje a Cancún...',
-              prefixText: '$selectedEmoji  ',
-            ),
-          ).animate(delay: 300.ms).fadeIn(),
-
-          const SizedBox(height: 16),
-          // Amount
-          TextField(
-            controller: amountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: '¿Cuánto necesitas ahorrar?',
-              prefixText: '\$  ',
-              hintText: '10,000',
-            ),
           ).animate(delay: 400.ms).fadeIn(),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           // Color picker
-          Text('Color de la meta', style: tt.labelLarge),
-          const SizedBox(height: 8),
+          Text('Color del Progreso', style: tt.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
           Row(
-            children: AppConstants.seedColors.map((c) {
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: AppConstants.seedColors.take(7).map((c) {
               final selected = c.hex == selectedColor;
               return GestureDetector(
                 onTap: () => onColorChanged(c.hex),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.only(right: 10),
-                  width: selected ? 36 : 28,
-                  height: selected ? 36 : 28,
+                  width: selected ? 44 : 36,
+                  height: selected ? 44 : 36,
                   decoration: BoxDecoration(
                     color: AppTheme.hexToColor(c.hex),
                     shape: BoxShape.circle,
-                    border: selected
-                        ? Border.all(color: cs.onSurface, width: 3)
-                        : null,
-                    boxShadow: selected
-                        ? [BoxShadow(color: AppTheme.hexToColor(c.hex).withOpacity(0.5), blurRadius: 8)]
-                        : null,
+                    border: selected ? Border.all(color: cs.surface, width: 3) : null,
+                    boxShadow: selected ? [BoxShadow(color: AppTheme.hexToColor(c.hex).withValues(alpha: 0.5), blurRadius: 12)] : null,
                   ),
                 ),
               );
             }).toList(),
           ).animate(delay: 500.ms).fadeIn(),
 
-          const SizedBox(height: 36),
+          const SizedBox(height: 48),
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: TextButton(
                   onPressed: isCreating ? null : onSkip,
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 52)),
-                  child: const Text('Saltar por ahora'),
+                  style: TextButton.styleFrom(minimumSize: const Size(0, 60)),
+                  child: const Text('Saltar'),
                 ),
               ),
               const SizedBox(width: 16),
@@ -511,14 +597,17 @@ class _FirstGoalPage extends StatelessWidget {
                 flex: 2,
                 child: FilledButton(
                   onPressed: isCreating ? null : onFinish,
-                  style: FilledButton.styleFrom(minimumSize: const Size(0, 52)),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 60),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
                   child: isCreating
                       ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white),
                         )
-                      : const Text('¡Empezar a ahorrar! 🚀'),
+                      : Text('Empezar a Ahorrar 🚀', style: tt.titleMedium?.copyWith(color: cs.onPrimary, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

@@ -32,7 +32,7 @@ class OllamaService {
 
   OllamaService({
     String baseUrl = 'http://localhost:11434',
-    String model = 'llama3',
+    String model = 'qwen2.5-coder:7b',
   })  : _baseUrl = baseUrl,
         _model = model {
     _initDio();
@@ -178,7 +178,7 @@ class OllamaService {
           'No se puede conectar a Ollama.\n'
           '1. Abre una terminal\n'
           '2. Ejecuta: ollama serve\n'
-          '3. Asegúrate de tener el modelo: ollama pull llama3',
+          '3. Asegúrate de tener el modelo: ollama pull qwen2.5-coder:7b',
         ),
       DioExceptionType.badResponse => OllamaFailure(
           'Ollama respondió con error ${e.response?.statusCode}: '

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,6 +10,7 @@ import '../../../core/utils/date_formatter.dart';
 import '../../../domain/entities/goal_entity.dart';
 import '../../providers/goals_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../widgets/common/premium_glass_widgets.dart';
 import '../../widgets/common/quick_deposit_dialog.dart';
 import '../../widgets/goals/goal_progress_card.dart';
 
@@ -28,83 +30,117 @@ class DashboardPage extends ConsumerWidget {
     final globalStreak = settings?.globalStreak ?? 0;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      extendBodyBehindAppBar: true,
       floatingActionButton: _QuickDepositFab(goals: goals),
-      body: CustomScrollView(
-        slivers: [
-          // ── App Bar ──────────────────────────────────────────
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            backgroundColor: cs.surface,
-            elevation: 0,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${DateFormatter.greeting()}, ${settings?.userName.isNotEmpty == true ? settings!.userName : "Amigo"} 👋',
-                  style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+      body: Stack(
+        children: [
+          // ── Immersive Soft Background ──
+          const SoftAnimatedBackground(),
+
+          // ── Content ──
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // ── Glass App Bar ──
+              SliverAppBar(
+                floating: true,
+                pinned: true,
+                backgroundColor: cs.surface.withValues(alpha: 0.7),
+                surfaceTintColor: Colors.transparent,
+                flexibleSpace: ClipRect(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: Container(color: Colors.transparent),
+                  ),
                 ),
-                Text(
-                  DateFormatter.formatDayMonth(DateTime.now()),
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // ── Summary Cards ─────────────────────────────
-                _SummaryCards(
-                  totalSaved: totalSaved,
-                  activeGoals: goals.length,
-                  globalStreak: globalStreak,
-                ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1),
-
-                const SizedBox(height: 24),
-
-                // ── 30-Day Chart ──────────────────────────────
-                _ThirtyDayChart(goals: goals)
-                    .animate(delay: 200.ms)
-                    .fadeIn(duration: 500.ms)
-                    .slideY(begin: 0.1),
-
-                const SizedBox(height: 24),
-
-                // ── Motivational Quote ────────────────────────
-                _QuoteCard()
-                    .animate(delay: 300.ms)
-                    .fadeIn(duration: 500.ms),
-
-                const SizedBox(height: 24),
-
-                // ── Active Goals ──────────────────────────────
-                if (goals.isNotEmpty) ...[
-                  Text(
-                    'Tus metas activas',
-                    style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                  ).animate(delay: 400.ms).fadeIn(),
-                  const SizedBox(height: 12),
-                  ...goals.asMap().entries.map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: GoalProgressCard(goal: e.value)
-                              .animate(delay: (450 + e.key * 60).ms)
-                              .fadeIn(duration: 400.ms)
-                              .slideX(begin: 0.05),
+                elevation: 0,
+                expandedHeight: 90,
+                toolbarHeight: 80,
+                title: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${DateFormatter.greeting()}, ${settings?.userName.isNotEmpty == true ? settings!.userName : "Amigo"} 👋',
+                        style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        DateFormatter.formatDayMonth(DateTime.now()),
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                ] else
-                  _EmptyGoalsCard()
-                      .animate(delay: 400.ms)
-                      .fadeIn(duration: 500.ms),
+                    ],
+                  ),
+                ),
+              ),
 
-                const SizedBox(height: 80), // FAB padding
-              ]),
-            ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // ── Summary Cards ─────────────────────────────
+                    _SummaryCards(
+                      totalSaved: totalSaved,
+                      activeGoals: goals.length,
+                      globalStreak: globalStreak,
+                    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, curve: Curves.easeOutCubic),
+
+                    const SizedBox(height: 28),
+
+                    // ── 30-Day Chart ──────────────────────────────
+                    _ThirtyDayChart(goals: goals)
+                        .animate(delay: 200.ms)
+                        .fadeIn(duration: 600.ms)
+                        .slideY(begin: 0.1, curve: Curves.easeOutCubic),
+
+                    const SizedBox(height: 28),
+
+                    // ── Motivational Quote ────────────────────────
+                    _QuoteCard()
+                        .animate(delay: 300.ms)
+                        .fadeIn(duration: 600.ms)
+                        .slideX(begin: 0.05),
+
+                    const SizedBox(height: 32),
+
+                    // ── Active Goals ──────────────────────────────
+                    if (goals.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Icon(Icons.track_changes_rounded, color: cs.primary, size: 24),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Tus metas activas',
+                            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ).animate(delay: 400.ms).fadeIn(),
+                      const SizedBox(height: 16),
+                      ...goals.asMap().entries.map(
+                            (e) => Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: GoalProgressCard(goal: e.value)
+                                  .animate(delay: (450 + e.key * 80).ms)
+                                  .fadeIn(duration: 500.ms)
+                                  .slideX(begin: 0.05, curve: Curves.easeOutQuad),
+                            ),
+                          ),
+                    ] else
+                      _EmptyGoalsCard()
+                          .animate(delay: 400.ms)
+                          .fadeIn(duration: 600.ms)
+                          .scaleXY(begin: 0.95),
+
+                    const SizedBox(height: 100), // FAB padding
+                  ]),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -128,37 +164,55 @@ class _SummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    
     return Row(
       children: [
         Expanded(
-          flex: 2,
-          child: _SummaryCard(
-            title: 'Total Ahorrado',
-            value: CurrencyFormatter.formatCompact(totalSaved),
-            subtitle: 'en todas las metas',
-            icon: Icons.account_balance_wallet_rounded,
-            gradient: true,
+          flex: 5,
+          child: GlassWrapper(
+            padding: const EdgeInsets.all(24),
+            customGradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                cs.primary.withValues(alpha: 0.8),
+                cs.tertiary.withValues(alpha: 0.6),
+              ],
+            ),
+            child: _HeroCardContent(
+              title: 'Total Ahorrado',
+              value: CurrencyFormatter.formatCompact(totalSaved),
+              subtitle: 'en todas las metas',
+              icon: Icons.account_balance_wallet_rounded,
+            ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         Expanded(
-          child: _SummaryCard(
-            title: 'Metas',
-            value: '$activeGoals',
-            subtitle: 'activas',
-            icon: Icons.flag_rounded,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _SummaryCard(
-            title: 'Racha',
-            value: '$globalStreak',
-            subtitle: globalStreak == 1 ? 'día' : 'días',
-            icon: globalStreak >= 7
-                ? Icons.local_fire_department_rounded
-                : Icons.trending_up_rounded,
-            streakMode: globalStreak >= 7,
+          flex: 3,
+          child: Column(
+            children: [
+              GlassWrapper(
+                padding: const EdgeInsets.all(16),
+                child: _MiniCardContent(
+                  title: 'Metas',
+                  value: '$activeGoals',
+                  icon: Icons.flag_rounded,
+                  color: cs.primary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GlassWrapper(
+                padding: const EdgeInsets.all(16),
+                child: _MiniCardContent(
+                  title: 'Racha',
+                  value: '$globalStreak',
+                  icon: globalStreak >= 7 ? Icons.local_fire_department_rounded : Icons.trending_up_rounded,
+                  color: globalStreak >= 7 ? Colors.orange : cs.tertiary,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -166,96 +220,89 @@ class _SummaryCards extends StatelessWidget {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
+class _HeroCardContent extends StatelessWidget {
   final String title;
   final String value;
   final String subtitle;
   final IconData icon;
-  final bool gradient;
-  final bool streakMode;
 
-  const _SummaryCard({
+  const _HeroCardContent({
     required this.title,
     required this.value,
     required this.subtitle,
     required this.icon,
-    this.gradient = false,
-    this.streakMode = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 24, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: tt.titleSmall?.copyWith(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text(
+          value,
+          style: tt.displaySmall?.copyWith(fontWeight: FontWeight.w900, color: Colors.white),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: tt.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.7)),
+        ),
+      ],
+    );
+  }
+}
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: gradient
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [cs.primary, cs.tertiary],
-              )
-            : null,
-        color: gradient ? null : cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: gradient
-            ? [
-                BoxShadow(
-                  color: cs.primary.withValues(alpha: 0.25),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                )
-              ]
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+class _MiniCardContent extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _MiniCardContent({required this.title, required this.value, required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 22, color: color),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: gradient
-                    ? cs.onPrimary.withValues(alpha: 0.8)
-                    : streakMode
-                        ? Colors.orange
-                        : cs.primary,
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  title,
-                  style: tt.labelSmall?.copyWith(
-                    color: gradient
-                        ? cs.onPrimary.withValues(alpha: 0.8)
-                        : cs.onSurfaceVariant,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              Text(title, style: tt.labelMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              Text(value, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: tt.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: gradient ? cs.onPrimary : cs.onSurface,
-            ),
-          ),
-          Text(
-            subtitle,
-            style: tt.bodySmall?.copyWith(
-              color: gradient
-                  ? cs.onPrimary.withValues(alpha: 0.7)
-                  : cs.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -272,54 +319,60 @@ class _ThirtyDayChart extends ConsumerWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    // Build 30-day cumulative savings data
     final now = DateTime.now();
     final from = now.subtract(const Duration(days: 29));
-    // Watch goals to trigger rebuild when amounts change
     ref.watch(activeGoalsProvider);
 
-    // Generate spot data from goals progress over time
-    // (Approximate with current amounts spread linearly)
     final spots = _buildSpots(goals, from, now);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-      ),
+    return GlassWrapper(
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Progreso — 30 días',
-                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Progresión de 30 días', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                  Text('Crecimiento estimado', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+                ],
+              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: cs.primaryContainer,
+                  color: cs.primaryContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
-                  CurrencyFormatter.formatCompact(
-                      goals.fold(0.0, (s, g) => s + g.currentAmount)),
-                  style: tt.labelMedium?.copyWith(
-                      color: cs.onPrimaryContainer,
-                      fontWeight: FontWeight.w600),
+                child: Row(
+                  children: [
+                    Icon(Icons.trending_up_rounded, size: 16, color: cs.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      CurrencyFormatter.formatCompact(goals.fold(0.0, (s, g) => s + g.currentAmount)),
+                      style: tt.labelLarge?.copyWith(color: cs.primary, fontWeight: FontWeight.w800),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           SizedBox(
-            height: 140,
+            height: 160,
             child: spots.isEmpty
                 ? Center(
-                    child: Text('Registra tu primer ahorro para ver el gráfico',
-                        style: tt.bodySmall
-                            ?.copyWith(color: cs.onSurfaceVariant)),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.show_chart_rounded, size: 48, color: cs.onSurfaceVariant.withValues(alpha: 0.2)),
+                        const SizedBox(height: 8),
+                        Text('Registra ahorros para visualizar el gráfico',
+                            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                      ],
+                    ),
                   )
                 : LineChart(
                     LineChartData(
@@ -328,67 +381,63 @@ class _ThirtyDayChart extends ConsumerWidget {
                         drawVerticalLine: false,
                         horizontalInterval: null,
                         getDrawingHorizontalLine: (v) => FlLine(
-                          color: cs.outlineVariant.withValues(alpha: 0.3),
+                          color: cs.outlineVariant.withValues(alpha: 0.2),
                           strokeWidth: 1,
+                          dashArray: [5, 5],
                         ),
                       ),
                       titlesData: FlTitlesData(
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 60,
+                            reservedSize: 50,
                             getTitlesWidget: (v, meta) => Text(
                               CurrencyFormatter.formatCompact(v),
-                              style: tt.labelSmall
-                                  ?.copyWith(color: cs.onSurfaceVariant),
+                              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
                             ),
                           ),
                         ),
-                        bottomTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
+                        bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       ),
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
                         LineChartBarData(
                           spots: spots,
                           isCurved: true,
-                          curveSmoothness: 0.35,
+                          curveSmoothness: 0.4,
                           color: cs.primary,
-                          barWidth: 3,
+                          barWidth: 4,
                           isStrokeCapRound: true,
                           dotData: const FlDotData(show: false),
+                          shadow: Shadow(color: cs.primary.withValues(alpha: 0.5), blurRadius: 10, offset: const Offset(0, 4)),
                           belowBarData: BarAreaData(
                             show: true,
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                cs.primary.withValues(alpha: 0.25),
-                                cs.primary.withValues(alpha: 0.01),
+                                cs.primary.withValues(alpha: 0.3),
+                                cs.primary.withValues(alpha: 0.0),
                               ],
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
+                  ).animate().fadeIn(duration: 800.ms),
           ),
         ],
       ),
     );
   }
 
-  List<FlSpot> _buildSpots(
-      List<GoalEntity> goals, DateTime from, DateTime to) {
+  List<FlSpot> _buildSpots(List<GoalEntity> goals, DateTime from, DateTime to) {
     if (goals.isEmpty) return [];
     final total = goals.fold(0.0, (s, g) => s + g.currentAmount);
     if (total <= 0) return [];
 
-    // Simple approximation: linear growth from 0 to current
     final days = to.difference(from).inDays;
     return List.generate(days + 1, (i) {
       final ratio = i / days;
@@ -407,40 +456,40 @@ class _QuoteCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final quote = MotivationalQuotes.todayQuote;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            cs.secondaryContainer,
-            cs.tertiaryContainer,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
+    return GlassWrapper(
+      padding: const EdgeInsets.all(24),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('✨', style: TextStyle(fontSize: 28)),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: cs.secondaryContainer.withValues(alpha: 0.5),
+              shape: BoxShape.circle,
+            ),
+            child: Text('✨', style: const TextStyle(fontSize: 24)),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Frase del día',
-                  style: tt.labelSmall?.copyWith(
-                      color: cs.onSecondaryContainer.withValues(alpha: 0.7)),
+                  'Inspiración del día',
+                  style: tt.labelMedium?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Text(
-                  quote,
-                  style: tt.bodyMedium?.copyWith(
-                    color: cs.onSecondaryContainer,
-                    fontWeight: FontWeight.w500,
+                  '"$quote"',
+                  style: tt.bodyLarge?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w600,
                     fontStyle: FontStyle.italic,
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -460,24 +509,23 @@ class _EmptyGoalsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: cs.outlineVariant.withValues(alpha: 0.5),
-            style: BorderStyle.solid),
-      ),
+    
+    return GlassWrapper(
+      padding: const EdgeInsets.all(48),
       child: Column(
         children: [
-          Text('🎯', style: const TextStyle(fontSize: 48)),
-          const SizedBox(height: 16),
-          Text('¡Crea tu primera meta!',
-              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: cs.primaryContainer.withValues(alpha: 0.5),
+              shape: BoxShape.circle,
+            ),
+            child: const Text('🎯', style: TextStyle(fontSize: 48)),
+          ).animate(onPlay: (c) => c.repeat(reverse: true)).moveY(begin: -5, end: 5, duration: 2.seconds),
+          const SizedBox(height: 24),
+          Text('¡Crea tu primera meta!', style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
-          Text('Ve a la sección Metas para empezar a ahorrar.',
+          Text('Ve a la sección Metas para empezar a ahorrar y construir tus sueños.',
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center),
         ],
@@ -495,6 +543,7 @@ class _QuickDepositFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return FloatingActionButton.extended(
       onPressed: goals.isEmpty
           ? null
@@ -502,9 +551,11 @@ class _QuickDepositFab extends StatelessWidget {
                 context: context,
                 builder: (_) => QuickDepositDialog(goals: goals),
               ),
+      backgroundColor: cs.primary,
+      foregroundColor: cs.onPrimary,
       icon: const Icon(Icons.add_rounded),
-      label: const Text('Registrar ahorro'),
-      elevation: 6,
+      label: const Text('Registrar ahorro', style: TextStyle(fontWeight: FontWeight.bold)),
+      elevation: 8,
     ).animate().scale(
           begin: const Offset(0.8, 0.8),
           delay: 800.ms,

@@ -134,11 +134,16 @@ AnalyticsState buildAnalyticsState({
   }
 
   final barData = grouped.entries
-      .map((e) => BarDataPoint(
-            date: DateTime.parse(e.key.length < 8 ? '${e.key}-01' : e.key),
-            amount: e.value,
-            label: e.key,
-          ))
+      .map((e) {
+        String parsedKey = e.key;
+        if (parsedKey.length == 4) parsedKey += '-01-01';
+        else if (parsedKey.length == 7) parsedKey += '-01';
+        return BarDataPoint(
+          date: DateTime.parse(parsedKey),
+          amount: e.value,
+          label: e.key,
+        );
+      })
       .toList()
     ..sort((a, b) => a.date.compareTo(b.date));
 

@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/goal_entity.dart';
 import '../../pages/goals/goal_detail_page.dart';
+import '../common/premium_glass_widgets.dart';
 
 /// Compact goal card for dashboard and goals list.
 class GoalProgressCard extends StatelessWidget {
@@ -28,16 +29,8 @@ class GoalProgressCard extends StatelessWidget {
           builder: (_) => GoalDetailPage(goalId: goal.id),
         ),
       ),
-      child: Container(
+      child: GlassWrapper(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: goalColor.withValues(alpha: 0.2),
-            width: 1.5,
-          ),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -15,7 +15,7 @@ OllamaService ollamaService(OllamaServiceRef ref) {
   final settings = ref.watch(settingsStreamProvider).valueOrNull;
   return OllamaService(
     baseUrl: settings?.ollamaUrl ?? 'http://localhost:11434',
-    model: settings?.ollamaModel ?? 'llama3',
+    model: settings?.ollamaModel ?? 'qwen2.5-coder:7b',
   );
 }
 
@@ -125,7 +125,7 @@ INSTRUCCIONES:
 
       final ollamaMessages = [
         OllamaMessage(role: OllamaRole.system, content: systemPrompt),
-        ...recentMsgs.map((m) => OllamaMessage(
+        ...recentMsgs.reversed.map((m) => OllamaMessage(
               role: m.isUser ? OllamaRole.user : OllamaRole.assistant,
               content: m.content,
             )),

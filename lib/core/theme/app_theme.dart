@@ -59,10 +59,37 @@ class AppTheme {
   }) {
     final seedColor = hexToColor(seedColorHex);
 
-    final scheme = ColorScheme.fromSeed(
+    ColorScheme scheme = ColorScheme.fromSeed(
       seedColor: seedColor,
       brightness: brightness,
     );
+
+    final hsl = HSLColor.fromColor(seedColor);
+    final h = hsl.hue;
+
+    if (brightness == Brightness.dark) {
+      scheme = scheme.copyWith(
+        surface: HSLColor.fromAHSL(1.0, h, 0.20, 0.08).toColor(),
+        surfaceContainerLowest: HSLColor.fromAHSL(1.0, h, 0.25, 0.05).toColor(),
+        surfaceContainerLow: HSLColor.fromAHSL(1.0, h, 0.20, 0.12).toColor(),
+        surfaceContainer: HSLColor.fromAHSL(1.0, h, 0.20, 0.16).toColor(),
+        surfaceContainerHigh: HSLColor.fromAHSL(1.0, h, 0.20, 0.20).toColor(),
+        surfaceContainerHighest: HSLColor.fromAHSL(1.0, h, 0.20, 0.24).toColor(),
+        primary: HSLColor.fromAHSL(1.0, h, 0.85, 0.65).toColor(),
+        tertiary: HSLColor.fromAHSL(1.0, (h + 40) % 360, 0.85, 0.65).toColor(),
+      );
+    } else {
+      scheme = scheme.copyWith(
+        surface: HSLColor.fromAHSL(1.0, h, 0.15, 0.98).toColor(),
+        surfaceContainerLowest: HSLColor.fromAHSL(1.0, h, 0.15, 0.95).toColor(),
+        surfaceContainerLow: HSLColor.fromAHSL(1.0, h, 0.15, 0.92).toColor(),
+        surfaceContainer: HSLColor.fromAHSL(1.0, h, 0.15, 0.89).toColor(),
+        surfaceContainerHigh: HSLColor.fromAHSL(1.0, h, 0.15, 0.86).toColor(),
+        surfaceContainerHighest: HSLColor.fromAHSL(1.0, h, 0.15, 0.83).toColor(),
+        primary: HSLColor.fromAHSL(1.0, h, 0.85, 0.45).toColor(),
+        tertiary: HSLColor.fromAHSL(1.0, (h + 40) % 360, 0.85, 0.45).toColor(),
+      );
+    }
 
     final textTheme = _buildTextTheme(scheme);
 

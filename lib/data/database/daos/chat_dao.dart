@@ -13,13 +13,13 @@ class ChatDao extends DatabaseAccessor<AppDatabase> with _$ChatDaoMixin {
   Stream<List<ChatMessage>> watchMessages({int sessionId = 1}) =>
       (select(chatMessages)
             ..where((m) => m.sessionId.equals(sessionId))
-            ..orderBy([(m) => OrderingTerm.asc(m.timestamp)]))
+            ..orderBy([(m) => OrderingTerm.desc(m.timestamp)]))
           .watch();
 
   Future<List<ChatMessage>> getMessages({int sessionId = 1}) =>
       (select(chatMessages)
             ..where((m) => m.sessionId.equals(sessionId))
-            ..orderBy([(m) => OrderingTerm.asc(m.timestamp)]))
+            ..orderBy([(m) => OrderingTerm.desc(m.timestamp)]))
           .get();
 
   /// Get last N messages for context window.
