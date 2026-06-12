@@ -1,0 +1,71 @@
+name: walletfy
+description: "WalletFY — Ahorro que Inspira. Crecimiento Claro."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Database
+  drift: ^2.23.1
+  drift_flutter: ^0.2.4
+  sqlite3_flutter_libs: ^0.5.31
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Charts
+  fl_chart: ^0.70.2
+
+  # HTTP / AI
+  dio: ^5.7.0
+
+  # Notifications (desktop)
+  local_notifier: ^0.1.6
+
+  # Animations
+  flutter_animate: ^4.5.2
+
+  # Export
+  csv: ^6.0.0
+  pdf: ^3.11.1
+  printing: ^5.13.2
+
+  # File picking & saving
+  file_selector: ^1.0.3
+
+  # Utils
+  uuid: ^4.5.1
+  intl: ^0.19.0
+  google_fonts: ^6.2.1
+  shared_preferences: ^2.3.3
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  equatable: ^2.0.7
+  collection: ^1.18.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.13
+  riverpod_generator: ^2.6.2
+  drift_dev: ^2.23.1
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+
+  # Inter font served via google_fonts package at runtime
